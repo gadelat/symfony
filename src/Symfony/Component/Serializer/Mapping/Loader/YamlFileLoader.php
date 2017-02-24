@@ -41,52 +41,50 @@ class YamlFileLoader extends FileLoader
             $this->classes = $this->getClassesFromYaml();
         }
 
-        if (!$this->classes) {
+        if (!isset($this->classes[$classMetadata->getName()])) {
             return false;
         }
 
-        if (isset($this->classes[$classMetadata->getName()])) {
-            $yaml = $this->classes[$classMetadata->getName()];
+        $yaml = $this->classes[$classMetadata->getName()];
 
-            if (isset($yaml['attributes']) && is_array($yaml['attributes'])) {
-                $attributesMetadata = $classMetadata->getAttributesMetadata();
+        if (!isset($yaml['attributes']) || !is_array($yaml['attributes'])) {
+            $yaml['attributes'] = array();
+        }
 
-                foreach ($yaml['attributes'] as $attribute => $data) {
-                    if (isset($attributesMetadata[$attribute])) {
-                        $attributeMetadata = $attributesMetadata[$attribute];
-                    } else {
-                        $attributeMetadata = new AttributeMetadata($attribute);
-                        $classMetadata->addAttributeMetadata($attributeMetadata);
+        $attributesMetadata = $classMetadata->getAttributesMetadata();
+
+        foreach ($yaml['attributes'] as $attribute => $data) {
+            if (isset($attributesMetadata[$attribute])) {
+                $attributeMetadata = $attributesMetadata[$attribute];
+            } else {
+                $attributeMetadata = new AttributeMetadata($attribute);
+                $classMetadata->addAttributeMetadata($attributeMetadata);
+            }
+
+            if (isset($data['groups'])) {
+                if (!is_array($data['groups'])) {
+                    throw new MappingException('The "groups" key must be an array of strings in "%s" for the attribute "%s" of the class "%s".', $this->file, $attribute, $classMetadata->getName());
+                }
+
+                foreach ($data['groups'] as $group) {
+                    if (!is_string($group)) {
+                        throw new MappingException('Group names must be strings in "%s" for the attribute "%s" of the class "%s".', $this->file, $attribute, $classMetadata->getName());
                     }
 
-                    if (isset($data['groups'])) {
-                        if (!is_array($data['groups'])) {
-                            throw new MappingException('The "groups" key must be an array of strings in "%s" for the attribute "%s" of the class "%s".', $this->file, $attribute, $classMetadata->getName());
-                        }
-
-                        foreach ($data['groups'] as $group) {
-                            if (!is_string($group)) {
-                                throw new MappingException('Group names must be strings in "%s" for the attribute "%s" of the class "%s".', $this->file, $attribute, $classMetadata->getName());
-                            }
-
-                            $attributeMetadata->addGroup($group);
-                        }
-                    }
-
-                    if (isset($data['max_depth'])) {
-                        if (!is_int($data['max_depth'])) {
-                            throw new MappingException('The "max_depth" value must be an integer in "%s" for the attribute "%s" of the class "%s".', $this->file, $attribute, $classMetadata->getName());
-                        }
-
-                        $attributeMetadata->setMaxDepth($data['max_depth']);
-                    }
+                    $attributeMetadata->addGroup($group);
                 }
             }
 
-            return true;
+            if (isset($data['max_depth'])) {
+                if (!is_int($data['max_depth'])) {
+                    throw new MappingException('The "max_depth" value must be an integer in "%s" for the attribute "%s" of the class "%s".', $this->file, $attribute, $classMetadata->getName());
+                }
+
+                $attributeMetadata->setMaxDepth($data['max_depth']);
+            }
         }
 
-        return false;
+        return true;
     }
 
     /**
