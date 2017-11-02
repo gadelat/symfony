@@ -55,6 +55,9 @@
             }) -}}
         {% endfor -%}
     {%- else -%}
+        {%- if errors|length > 0 -%}
+            {%- set attr = attr|merge({class: (attr.class|default('') ~ ' form-control is-invalid')|trim}) %}
+        {%- endif -%}
         <div {{ block('widget_container_attributes') }}>
             {%- for child in form %}
                 {{- form_widget(child, {
