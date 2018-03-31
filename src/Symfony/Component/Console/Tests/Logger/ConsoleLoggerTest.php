@@ -93,6 +93,14 @@ class ConsoleLoggerTest extends TestCase
         );
     }
 
+    public function testColoredOutputMapping()
+    {
+        $out = new BufferedOutput(OutputInterface::VERBOSITY_VERY_VERBOSE, true);
+        $logger = new ConsoleLogger($out);
+        $logger->log(LogLevel::NOTICE, 'foo bar');
+        $this->assertEquals("\033[34m[notice] foo bar\033[39m".PHP_EOL, $out->fetch());
+    }
+
     public function testHasErrored()
     {
         $logger = new ConsoleLogger(new BufferedOutput());
