@@ -35,6 +35,10 @@ trait BlockingStoreTestTrait
      */
     public function testBlockingLocks()
     {
+        if (!extension_loaded('posix')) {
+            $this->markTestSkipped('Extension posix is required.');
+        }
+        
         // Amount a microsecond used to order async actions
         $clockDelay = 50000;
 
